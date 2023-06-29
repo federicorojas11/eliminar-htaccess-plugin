@@ -8,16 +8,27 @@ Author: Federico Rojas
 */
 
 function eliminar_archivos_htaccess() {
-    $archivos_htaccess = glob(ABSPATH . '**/.htaccess', GLOB_NOSORT);
+    $directorio_base = new RecursiveDirectoryIterator(ABSPATH);
+    $archivos = new RecursiveIteratorIterator($directorio_base);
+    $patron = '/^.+\/\.htaccess$/i';
+    $archivos_htaccess = new RegexIterator($archivos, $patron, RecursiveRegexIterator::GET_MATCH);
 
-    if ($archivos_htaccess) {
-        $fecha_objetivo = strtotime('2023-02-14'); // Modificar esta fecha con la fecha deseada
+    $fecha_limite = strtotime('2023-01-01');
 
-        foreach ($archivos_htaccess as $archivo) {
-            if (is_file($archivo) && filemtime($archivo) === $fecha_objetivo) {
-                unlink($archivo);
+    foreach ($archivos_htaccess as $archivo) {
+        $ruta_archivo = $archivo[0];
+        if (is_file($ruta_archivo)) {
+            $fecha_modificacion = filemtime($ruta_archivo);
+            if ($fecha_modificacion == $fecha_limite) {
+                $resultado = unlink($ruta_archivo);
+                if ($resultado) {
+                    echo 'Se ha eliminado el archivo: ' . $ruta_archivo . '<br>';
+                } else {
+                    echo 'Error al eliminar el archivo: ' . $ruta_archivo . '<br>';
+                }
             }
         }
     }
 }
+
 add_action('init', 'eliminar_archivos_htaccess');
